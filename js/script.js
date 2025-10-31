@@ -1,5 +1,5 @@
 // ====== CONFIG ======
-// Using the provided CDN JSON feed as specified in requirements
+// Using the class-provided JSON feed as specified in project requirements
 const APOD_DATA_URL = "https://cdn.jsdelivr.net/gh/GCA-Classroom/apod/data.json";
 
 // ====== UTILITIES ======
@@ -21,7 +21,7 @@ const addDays = (d, n) => {
 const diffDays = (a, b) => Math.round((b - a) / 86400000);
 
 const clampDate = (d) => {
-  // For CDN data, use a reasonable date range
+  // For the class JSON feed, use a reasonable date range
   const min = new Date("2020-01-01");
   const max = new Date(); // Current date
   max.setHours(0,0,0,0);
@@ -109,17 +109,17 @@ const modalDate    = $("#modalDate");
 const modalExpl    = $("#modalExplanation");
 const modalClose   = $("#modalClose");
 
-// Initialize date inputs with a valid range for the CDN data
+// Initialize date inputs for the class JSON feed data
 function initDates(){
-  // Set dates that should be available in the CDN data
+  // Set dates for a recent period that should have data in the JSON feed
   const endDate = new Date(2025, 9, 1); // October 1, 2025
-  const startDate = new Date(2025, 8, 23); // September 23, 2025 (9 days before)
+  const startDate = new Date(2025, 8, 24); // September 24, 2025 (about a week before)
   
   // Set the input values
   startInp.value = fmt(startDate);
   endInp.value = fmt(endDate);
   
-  console.log('Date inputs initialized for CDN data:', {
+  console.log('Date inputs initialized for JSON feed data:', {
     start: startInp.value,
     end: endInp.value
   });
@@ -250,20 +250,20 @@ window.addEventListener("keydown", (e)=> {
 });
 
 async function fetchAPODRange(startDate, endDate){
-  console.log('Fetching APOD data from CDN for:', {
+  console.log('Fetching APOD data from class-provided JSON feed for:', {
     start: fmt(startDate),
     end: fmt(endDate)
   });
 
-  // Fetch all data from CDN
+  // Fetch all data from the class-provided JSON feed
   const res = await fetch(APOD_DATA_URL);
   if(!res.ok){
     const text = await res.text();
-    throw new Error(`APOD fetch failed (${res.status}): ${text || res.statusText}`);
+    throw new Error(`APOD data fetch failed (${res.status}): ${text || res.statusText}`);
   }
   
   const allData = await res.json();
-  console.log('Fetched', allData.length, 'total entries from CDN');
+  console.log('Fetched', allData.length, 'total entries from JSON feed');
   
   // Filter data based on date range
   const startStr = fmt(startDate);
@@ -275,8 +275,11 @@ async function fetchAPODRange(startDate, endDate){
   
   console.log('Filtered to', filteredData.length, 'entries in date range');
   
-  // Sort by date (newest first)
-  return filteredData.sort((a,b)=> b.date.localeCompare(a.date));
+  // Sort by date (newest first) and return the filtered data
+  const sortedData = filteredData.sort((a,b)=> b.date.localeCompare(a.date));
+  
+  // Take up to 9 items for display
+  return sortedData.slice(0, 9);
 }
 
 function setStatus(msg=""){ statusTx.textContent = msg; }
@@ -341,35 +344,42 @@ async function runQuery(){
     let s = startInp.value ? new Date(startInp.value) : null;
     let e = endInp.value ? new Date(endInp.value) : null;
 
+    // Ensure we get data from the selected date range
     if(!s && !e){
-      e = new Date(); // Use current date
-      s = addDays(e, -8);
+      // Default: use dates that should have data in the JSON feed
+      e = new Date(2025, 9, 1); // October 1, 2025
+      s = new Date(2025, 8, 24); // September 24, 2025
     }else if(s && !e){
+      // Start date provided: calculate end date (about a week later)
       s = clampDate(s);
-      e = clampDate(addDays(s, 8));
-    }else if(!s && e){
+      e = new Date(s);
+      e.setDate(e.getDate() + 7); // About a week of data
       e = clampDate(e);
-      s = clampDate(addDays(e, -8));
+    }else if(!s && e){
+      // End date provided: calculate start date (about a week before)
+      e = clampDate(e);
+      s = new Date(e);
+      s.setDate(s.getDate() - 7); // About a week of data
+      s = clampDate(s);
     }else{
+      // Both dates provided: use as-is with clamping
       s = clampDate(s); 
       e = clampDate(e);
-      const want = 8;
-      const actual = diffDays(s,e);
-      if(actual !== want){
-        e = clampDate(addDays(s, want));
-      }
     }
 
+    // Update the input fields to reflect the actual date range
     startInp.value = fmt(s);
     endInp.value = fmt(e);
 
-    setStatus(`Fetching APOD entries from ${fmt(s)} to ${fmt(e)}…`);
+    const dayCount = Math.min(diffDays(s, e) + 1, 9); // Limit to 9 items max
+    setStatus(`Fetching space images from ${fmt(s)} to ${fmt(e)}…`);
+    
     const items = await fetchAPODRange(s, e);
 
-    if(items.length < 9){
-      setStatus(`Fetched ${items.length} item(s). (Some dates may be unavailable in APOD.)`);
-    }else{
-      setStatus(`Fetched ${items.length} item(s).`);
+    if(items.length === 0){
+      setStatus(`No APOD data available for the selected date range.`);
+    } else {
+      setStatus(`Successfully loaded ${items.length} space image(s).`);
     }
 
     const frag = document.createDocumentFragment();
@@ -377,7 +387,7 @@ async function runQuery(){
     gallery.appendChild(frag);
 
   }catch(err){
-    console.error(err);
+    console.error('APOD fetch error:', err);
     setStatus(`Error: ${err.message}`);
   }finally{
     setLoading(false);
