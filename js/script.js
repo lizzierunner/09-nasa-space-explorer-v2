@@ -2,6 +2,525 @@
 // Using the class-provided JSON feed as specified in project requirements
 const APOD_DATA_URL = "https://cdn.jsdelivr.net/gh/GCA-Classroom/apod/data.json";
 
+// ====== AUDIO SYSTEM ======
+class SpaceAudio {
+  constructor() {
+    this.enabled = false;
+    this.audioContext = null;
+    this.sounds = {};
+    this.initAudio();
+  }
+
+  async initAudio() {
+    try {
+      // Create Web Audio context
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Generate space-themed sound effects using Web Audio API
+      this.sounds = {
+        hover: this.createSpaceBeep(220, 0.1),
+        click: this.createSpaceBeep(440, 0.2),
+        woosh: this.createWooshSound(),
+        success: this.createSuccessChime(),
+        modal: this.createModalOpen()
+      };
+    } catch (error) {
+      console.log('Audio not available:', error);
+    }
+  }
+
+  createSpaceBeep(frequency, duration) {
+    return () => {
+      if (!this.enabled || !this.audioContext) return;
+      
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+      
+      oscillator.start(this.audioContext.currentTime);
+      oscillator.stop(this.audioContext.currentTime + duration);
+    };
+  }
+
+  createWooshSound() {
+    return () => {
+      if (!this.enabled || !this.audioContext) return;
+      
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      const filter = this.audioContext.createBiquadFilter();
+      
+      oscillator.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.3);
+      oscillator.type = 'sawtooth';
+      
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.3);
+      
+      gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.05, this.audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+      
+      oscillator.start(this.audioContext.currentTime);
+      oscillator.stop(this.audioContext.currentTime + 0.3);
+    };
+  }
+
+  createSuccessChime() {
+    return () => {
+      if (!this.enabled || !this.audioContext) return;
+      
+      [523.25, 659.25, 783.99].forEach((freq, i) => {
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.value = freq;
+        oscillator.type = 'sine';
+        
+        const startTime = this.audioContext.currentTime + (i * 0.1);
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.08, startTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + 0.3);
+      });
+    };
+  }
+
+  createModalOpen() {
+    return () => {
+      if (!this.enabled || !this.audioContext) return;
+      
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime);
+      oscillator.frequency.linearRampToValueAtTime(300, this.audioContext.currentTime + 0.2);
+      oscillator.type = 'triangle';
+      
+      gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.06, this.audioContext.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.4);
+      
+      oscillator.start(this.audioContext.currentTime);
+      oscillator.stop(this.audioContext.currentTime + 0.4);
+    };
+  }
+
+  play(soundName) {
+    if (this.sounds[soundName]) {
+      this.sounds[soundName]();
+    }
+  }
+
+  toggle() {
+    this.enabled = !this.enabled;
+    return this.enabled;
+  }
+}
+
+const spaceAudio = new SpaceAudio();
+
+// ====== PARTICLE SYSTEM ======
+class ParticleSystem {
+  constructor() {
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.particles = [];
+    this.mouse = { x: 0, y: 0 };
+    this.setupCanvas();
+    this.bindEvents();
+    this.animate();
+  }
+
+  setupCanvas() {
+    this.canvas.id = 'particle-canvas';
+    this.canvas.style.position = 'fixed';
+    this.canvas.style.top = '0';
+    this.canvas.style.left = '0';
+    this.canvas.style.pointerEvents = 'none';
+    this.canvas.style.zIndex = '1';
+    this.canvas.style.opacity = '0.7';
+    document.body.appendChild(this.canvas);
+    this.resize();
+  }
+
+  resize() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  }
+
+  bindEvents() {
+    window.addEventListener('resize', () => this.resize());
+    
+    document.addEventListener('mousemove', (e) => {
+      this.mouse.x = e.clientX;
+      this.mouse.y = e.clientY;
+      
+      // Create particles on mouse move
+      if (Math.random() < 0.3) {
+        this.createParticle(e.clientX, e.clientY);
+      }
+    });
+
+    // Create burst on click
+    document.addEventListener('click', (e) => {
+      for (let i = 0; i < 8; i++) {
+        this.createParticle(e.clientX, e.clientY, true);
+      }
+    });
+  }
+
+  createParticle(x, y, burst = false) {
+    const particle = {
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * (burst ? 8 : 2),
+      vy: (Math.random() - 0.5) * (burst ? 8 : 2),
+      life: 1,
+      decay: Math.random() * 0.02 + 0.01,
+      size: Math.random() * 3 + 1,
+      color: burst ? 
+        `hsl(${Math.random() * 60 + 200}, 70%, 60%)` : // Blue spectrum for burst
+        `hsl(${Math.random() * 360}, 50%, 70%)` // Random colors for trail
+    };
+    
+    this.particles.push(particle);
+  }
+
+  updateParticles() {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const particle = this.particles[i];
+      
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.life -= particle.decay;
+      particle.vx *= 0.98;
+      particle.vy *= 0.98;
+      
+      if (particle.life <= 0) {
+        this.particles.splice(i, 1);
+      }
+    }
+  }
+
+  draw() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    this.particles.forEach(particle => {
+      this.ctx.save();
+      this.ctx.globalAlpha = particle.life;
+      this.ctx.fillStyle = particle.color;
+      this.ctx.beginPath();
+      this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.restore();
+    });
+  }
+
+  animate() {
+    this.updateParticles();
+    this.draw();
+    requestAnimationFrame(() => this.animate());
+  }
+}
+
+const particleSystem = new ParticleSystem();
+
+// ====== KEYBOARD NAVIGATION ======
+class KeyboardNav {
+  constructor() {
+    this.currentCard = 0;
+    this.cards = [];
+    this.shortcuts = {};
+    this.setupShortcuts();
+    this.bindEvents();
+    this.showHelp = false;
+  }
+
+  setupShortcuts() {
+    this.shortcuts = {
+      'ArrowRight': () => this.navigateCards(1),
+      'ArrowLeft': () => this.navigateCards(-1),
+      'ArrowDown': () => this.navigateCards(3),
+      'ArrowUp': () => this.navigateCards(-3),
+      'Enter': () => this.openCurrentCard(),
+      ' ': () => this.getRandomFact(),
+      'f': () => this.toggleFullscreen(),
+      's': () => this.toggleSound(),
+      'h': () => this.toggleHelpOverlay(),
+      '?': () => this.toggleHelpOverlay(),
+      'r': () => this.reloadGallery()
+    };
+  }
+
+  bindEvents() {
+    document.addEventListener('keydown', (e) => {
+      // Don't interfere with form inputs
+      if (e.target.tagName === 'INPUT') return;
+      
+      const action = this.shortcuts[e.key];
+      if (action) {
+        e.preventDefault();
+        action();
+        spaceAudio.play('click');
+      }
+    });
+  }
+
+  updateCards() {
+    this.cards = Array.from(document.querySelectorAll('.card'));
+    this.currentCard = 0;
+    this.highlightCurrentCard();
+  }
+
+  navigateCards(direction) {
+    if (this.cards.length === 0) return;
+    
+    this.cards[this.currentCard]?.classList.remove('keyboard-focused');
+    this.currentCard = Math.max(0, Math.min(this.cards.length - 1, this.currentCard + direction));
+    this.highlightCurrentCard();
+  }
+
+  highlightCurrentCard() {
+    if (this.cards[this.currentCard]) {
+      this.cards[this.currentCard].classList.add('keyboard-focused');
+      this.cards[this.currentCard].scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }
+
+  openCurrentCard() {
+    if (this.cards[this.currentCard]) {
+      this.cards[this.currentCard].click();
+    }
+  }
+
+  getRandomFact() {
+    currentFact = setRandomFact(currentFact);
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  toggleSound() {
+    const enabled = spaceAudio.toggle();
+    this.showNotification(`Sound ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  reloadGallery() {
+    runQuery();
+  }
+
+  toggleHelpOverlay() {
+    this.showHelp = !this.showHelp;
+    
+    let helpOverlay = document.getElementById('keyboard-help');
+    if (this.showHelp && !helpOverlay) {
+      this.createHelpOverlay();
+    } else if (helpOverlay) {
+      helpOverlay.remove();
+      this.showHelp = false;
+    }
+  }
+
+  createHelpOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'keyboard-help';
+    overlay.innerHTML = `
+      <div class="help-content">
+        <h3>🚀 Keyboard Shortcuts</h3>
+        <div class="shortcut-grid">
+          <div><kbd>← → ↑ ↓</kbd> Navigate gallery</div>
+          <div><kbd>Enter</kbd> Open image</div>
+          <div><kbd>Space</kbd> Random fact</div>
+          <div><kbd>S</kbd> Toggle sound</div>
+          <div><kbd>F</kbd> Fullscreen</div>
+          <div><kbd>R</kbd> Reload gallery</div>
+          <div><kbd>H</kbd> or <kbd>?</kbd> Toggle help</div>
+        </div>
+        <p>Press <kbd>Esc</kbd> or <kbd>H</kbd> to close</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'space-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 2000);
+  }
+}
+
+const keyboardNav = new KeyboardNav();
+
+// ====== FAVORITES SYSTEM ======
+class FavoritesManager {
+  constructor() {
+    this.favorites = this.loadFavorites();
+    this.createFavoritesUI();
+  }
+
+  loadFavorites() {
+    try {
+      return JSON.parse(localStorage.getItem('nasa-favorites') || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  saveFavorites() {
+    localStorage.setItem('nasa-favorites', JSON.stringify(this.favorites));
+  }
+
+  createFavoritesUI() {
+    // Add favorites button to toolbar
+    const toolbar = document.querySelector('.toolbar');
+    const favButton = document.createElement('button');
+    favButton.id = 'favorites-btn';
+    favButton.innerHTML = `⭐ Favorites <span class="fav-count">(${this.favorites.length})</span>`;
+    favButton.className = 'favorites-button';
+    toolbar.querySelector('.controls').appendChild(favButton);
+
+    favButton.addEventListener('click', () => this.showFavoritesModal());
+  }
+
+  toggleFavorite(item) {
+    const index = this.favorites.findIndex(fav => fav.date === item.date);
+    
+    if (index === -1) {
+      this.favorites.push(item);
+      spaceAudio.play('success');
+      this.showNotification('Added to favorites! ⭐');
+    } else {
+      this.favorites.splice(index, 1);
+      spaceAudio.play('click');
+      this.showNotification('Removed from favorites');
+    }
+    
+    this.saveFavorites();
+    this.updateFavoritesCount();
+    this.updateFavoriteButtons();
+  }
+
+  isFavorite(item) {
+    return this.favorites.some(fav => fav.date === item.date);
+  }
+
+  updateFavoritesCount() {
+    const countElement = document.querySelector('.fav-count');
+    if (countElement) {
+      countElement.textContent = `(${this.favorites.length})`;
+    }
+  }
+
+  updateFavoriteButtons() {
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+      const date = btn.dataset.date;
+      const isFav = this.favorites.some(fav => fav.date === date);
+      btn.innerHTML = isFav ? '⭐' : '☆';
+      btn.classList.toggle('favorited', isFav);
+    });
+  }
+
+  showFavoritesModal() {
+    const modal = document.createElement('div');
+    modal.className = 'favorites-modal';
+    modal.innerHTML = `
+      <div class="favorites-dialog">
+        <div class="favorites-header">
+          <h2>⭐ Your Favorite Space Images</h2>
+          <button class="close-favorites">✕</button>
+        </div>
+        <div class="favorites-content">
+          ${this.favorites.length === 0 ? 
+            '<p class="no-favorites">No favorites yet! Click the ⭐ on any image to add it.</p>' :
+            this.favorites.map(item => `
+              <div class="favorite-item" data-date="${item.date}">
+                <img src="${item.url}" alt="${item.title}" class="favorite-thumb">
+                <div class="favorite-info">
+                  <h4>${item.title}</h4>
+                  <p class="favorite-date">${new Date(item.date).toLocaleDateString()}</p>
+                  <button class="view-favorite" data-item='${JSON.stringify(item)}'>View</button>
+                  <button class="remove-favorite" data-date="${item.date}">Remove</button>
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Event listeners
+    modal.querySelector('.close-favorites').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+    
+    modal.querySelectorAll('.view-favorite').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const item = JSON.parse(e.target.dataset.item);
+        modal.remove();
+        openModal(item);
+      });
+    });
+    
+    modal.querySelectorAll('.remove-favorite').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const date = e.target.dataset.date;
+        const item = this.favorites.find(fav => fav.date === date);
+        if (item) this.toggleFavorite(item);
+        modal.remove();
+        this.showFavoritesModal(); // Refresh modal
+      });
+    });
+  }
+
+  showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'space-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 2000);
+  }
+}
+
+const favoritesManager = new FavoritesManager();
+
 // ====== UTILITIES ======
 const $ = sel => document.querySelector(sel);
 
@@ -127,6 +646,7 @@ function initDates(){
 
 function openModal(item){
   console.log('Debug - Opening modal for:', item);
+  spaceAudio.play('modal');
   
   const formattedDate = new Date(item.date).toLocaleDateString(undefined, {
     weekday: 'long',
@@ -140,6 +660,26 @@ function openModal(item){
   modalExpl.textContent = item.explanation || "No explanation available.";
 
   modalMedia.innerHTML = "";
+
+  // Add sharing buttons
+  const shareContainer = document.createElement('div');
+  shareContainer.className = 'share-container';
+  shareContainer.innerHTML = `
+    <div class="share-buttons">
+      <button class="share-btn twitter" data-platform="twitter">
+        🐦 Tweet
+      </button>
+      <button class="share-btn facebook" data-platform="facebook">
+        📘 Share
+      </button>
+      <button class="share-btn copy" data-platform="copy">
+        📋 Copy Link
+      </button>
+      <button class="share-btn download" data-platform="download">
+        💾 Download
+      </button>
+    </div>
+  `;
 
   if(item.media_type === "image"){
     const src = item.hdurl || item.url;
@@ -233,9 +773,80 @@ function openModal(item){
     }
   }
 
+  // Add sharing functionality after media
+  modalMedia.appendChild(shareContainer);
+  setupSharingButtons(item);
+
   modal.setAttribute("aria-hidden","false");
   document.body.style.overflow = "hidden";
   modalClose.focus();
+}
+
+function setupSharingButtons(item) {
+  const shareButtons = document.querySelectorAll('.share-btn');
+  
+  shareButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const platform = btn.dataset.platform;
+      shareContent(item, platform);
+      spaceAudio.play('click');
+    });
+  });
+}
+
+function shareContent(item, platform) {
+  const url = window.location.href;
+  const text = `Check out this amazing space image: "${item.title}" from NASA's Astronomy Picture of the Day!`;
+  const imageUrl = item.hdurl || item.url;
+  
+  switch(platform) {
+    case 'twitter':
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+      break;
+    case 'facebook':
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+      break;
+    case 'copy':
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+        showNotification('Link copied to clipboard! 📋');
+      });
+      break;
+    case 'download':
+      if (item.media_type === 'image') {
+        downloadImage(imageUrl, `NASA_APOD_${item.date}.jpg`);
+      } else {
+        showNotification('Video download not available, but you can visit the source!');
+      }
+      break;
+  }
+}
+
+function downloadImage(url, filename) {
+  fetch(url)
+    .then(response => response.blob())
+    .then(blob => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      showNotification('Image downloaded! 💾');
+    })
+    .catch(() => {
+      showNotification('Download failed - you can save the image manually!');
+    });
+}
+
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'space-notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => notification.remove(), 3000);
 }
 
 function closeModal(){
@@ -302,6 +913,19 @@ function buildCard(item){
   img.className = "thumb";
   wrap.appendChild(img);
 
+  // Add favorite button
+  const favoriteBtn = document.createElement("button");
+  favoriteBtn.className = "favorite-btn";
+  favoriteBtn.dataset.date = item.date;
+  favoriteBtn.innerHTML = favoritesManager.isFavorite(item) ? '⭐' : '☆';
+  favoriteBtn.classList.toggle('favorited', favoritesManager.isFavorite(item));
+  favoriteBtn.setAttribute('aria-label', 'Toggle favorite');
+  favoriteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    favoritesManager.toggleFavorite(item);
+  });
+  wrap.appendChild(favoriteBtn);
+
   if(item.media_type === "video"){
     const badge = document.createElement("div");
     badge.className = "badge";
@@ -327,9 +951,22 @@ function buildCard(item){
   card.appendChild(wrap);
   card.appendChild(meta);
 
-  card.addEventListener("click", ()=> openModal(item));
-  card.addEventListener("keydown", (e)=> { 
-    if(e.key === "Enter" || e.key === " ") openModal(item); 
+  // Enhanced event listeners with audio
+  card.addEventListener("click", () => {
+    spaceAudio.play('woosh');
+    openModal(item);
+  });
+  
+  card.addEventListener("keydown", (e) => { 
+    if(e.key === "Enter" || e.key === " ") {
+      spaceAudio.play('woosh');
+      openModal(item);
+    }
+  });
+
+  // Hover sound effects
+  card.addEventListener("mouseenter", () => {
+    spaceAudio.play('hover');
   });
 
   return card;
@@ -338,8 +975,9 @@ function buildCard(item){
 async function runQuery(){
   try{
     setLoading(true);
-    setStatus("Preparing your 9-day APOD window…");
+    setStatus("Preparing your space gallery…");
     gallery.innerHTML = "";
+    spaceAudio.play('woosh');
 
     let s = startInp.value ? new Date(startInp.value) : null;
     let e = endInp.value ? new Date(endInp.value) : null;
@@ -380,11 +1018,16 @@ async function runQuery(){
       setStatus(`No APOD data available for the selected date range.`);
     } else {
       setStatus(`Successfully loaded ${items.length} space image(s).`);
+      spaceAudio.play('success');
     }
 
     const frag = document.createDocumentFragment();
     items.forEach(it => frag.appendChild(buildCard(it)));
     gallery.appendChild(frag);
+
+    // Update keyboard navigation and favorites
+    keyboardNav.updateCards();
+    favoritesManager.updateFavoriteButtons();
 
   }catch(err){
     console.error('APOD fetch error:', err);
@@ -499,13 +1142,44 @@ runQuery = async function() {
   initImageReveal();
 };
 
+// Enhanced button event listeners
+goBtn.addEventListener("click", runQuery);
+
+// Sound toggle button
+const soundToggle = $("#sound-toggle");
+soundToggle.addEventListener("click", () => {
+  const enabled = spaceAudio.toggle();
+  soundToggle.innerHTML = enabled ? '🔊' : '🔇';
+  soundToggle.classList.toggle('disabled', !enabled);
+  spaceAudio.play('click');
+  showNotification(`Sound effects ${enabled ? 'enabled' : 'disabled'}`);
+});
+
+// Help toggle button
+const helpToggle = $("#help-toggle");
+helpToggle.addEventListener("click", () => {
+  keyboardNav.toggleHelpOverlay();
+  spaceAudio.play('click');
+});
+
 // Pressing Enter in date inputs triggers fetch
 [startInp, endInp].forEach(inp => {
   inp.addEventListener("keydown", e => { if(e.key === "Enter") runQuery(); });
 });
 
-// Auto-load on start
+// Auto-load on start with spectacular entrance
 window.addEventListener('load', () => {
-  console.log('Page loaded, running initial query...');
+  console.log('🚀 NASA Space Explorer loaded - prepare for liftoff!');
+  
+  // Enable audio after user interaction
+  document.addEventListener('click', () => {
+    spaceAudio.enabled = true;
+  }, { once: true });
+  
   runQuery();
+  
+  // Show welcome message
+  setTimeout(() => {
+    showNotification('🚀 Welcome to NASA Space Explorer! Press H for keyboard shortcuts.');
+  }, 1000);
 });

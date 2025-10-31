@@ -396,3 +396,267 @@ footer{ color:var(--muted); font-size:.9rem; padding:2rem 1rem 3rem; text-align:
     height: 45px;
   }
 }
+
+/* Spectacular New Features */
+
+/* Keyboard Navigation */
+.keyboard-focused {
+  outline: 3px solid var(--nasa-accent) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 20px rgba(75, 180, 230, 0.4) !important;
+  transform: translateY(-4px) scale(1.02) !important;
+}
+
+/* Help Overlay */
+#keyboard-help {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.help-content {
+  background: linear-gradient(180deg, #1a2040, #0f1527);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  border: 2px solid var(--nasa-accent);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  max-width: 500px;
+  text-align: center;
+}
+
+.help-content h3 {
+  margin-top: 0;
+  color: var(--nasa-accent);
+  font-size: 1.5rem;
+}
+
+.shortcut-grid {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+/* Favorites System */
+.favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #ffd700;
+  z-index: 2;
+}
+
+.favorite-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.favorite-btn.favorited {
+  color: #ffd700;
+  text-shadow: 0 0 10px #ffd700;
+}
+
+.favorites-button {
+  background: var(--nasa-accent) !important;
+  margin-left: 0.5rem;
+}
+
+.favorites-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.favorites-dialog {
+  background: linear-gradient(180deg, #1a2040, #0f1527);
+  color: white;
+  padding: 0;
+  border-radius: 20px;
+  border: 2px solid var(--nasa-accent);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  max-width: 800px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.favorites-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.favorites-content {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.favorite-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.favorite-item:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--nasa-accent);
+}
+
+.favorite-thumb {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.favorite-info {
+  flex: 1;
+}
+
+.favorite-info h4 {
+  margin: 0 0 0.5rem;
+  color: var(--nasa-accent);
+}
+
+.favorite-date {
+  color: #ccc;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.view-favorite, .remove-favorite {
+  margin-right: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.remove-favorite {
+  background: var(--nasa-red) !important;
+}
+
+/* Sharing Features */
+.share-container {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.share-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.share-btn:hover {
+  background: var(--nasa-accent);
+  border-color: var(--nasa-accent);
+  transform: translateY(-2px);
+}
+
+/* Notifications */
+.space-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, var(--nasa-blue), var(--nasa-accent));
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  z-index: 2000;
+  animation: slideInNotification 0.4s ease, fadeOutNotification 0.4s ease 2.6s forwards;
+  font-weight: 600;
+}
+
+@keyframes slideInNotification {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutNotification {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Enhanced Controls */
+#sound-toggle, #help-toggle {
+  background: rgba(255,255,255,0.1) !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  margin-left: 0.5rem !important;
+  border-radius: 50% !important;
+  font-size: 1.2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#sound-toggle:hover, #help-toggle:hover {
+  background: var(--nasa-accent) !important;
+  border-color: var(--nasa-accent) !important;
+  transform: scale(1.1) !important;
+}
+
+#sound-toggle.disabled {
+  opacity: 0.5;
+}
+
+#sound-toggle.disabled::before {
+  content: '🔇';
+  position: absolute;
+}
+
+/* Particle Canvas - ensure proper layering */
+#particle-canvas {
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
