@@ -134,6 +134,189 @@ header{
   font-weight: 400;
 }
 
+/* Music Recommendation Section */
+.music-recommendation {
+  background: linear-gradient(135deg, #1a2040, #2a3860);
+  border: 1px solid rgba(75, 180, 230, 0.3);
+  border-radius: 15px;
+  margin: 1rem 0;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(75, 180, 230, 0.1);
+  transition: all 0.3s ease;
+  animation: musicSlideIn 0.8s ease-out;
+}
+
+.music-recommendation:hover {
+  border-color: rgba(75, 180, 230, 0.6);
+  box-shadow: 0 6px 25px rgba(75, 180, 230, 0.2);
+  transform: translateY(-2px);
+}
+
+.music-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  position: relative;
+}
+
+.music-icon {
+  font-size: 2rem;
+  animation: musicPulse 2s ease-in-out infinite;
+}
+
+.music-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.music-info h3 {
+  margin: 0 0 0.25rem 0;
+  color: var(--nasa-blue);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.music-info p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.spotify-link {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  padding: 0.5rem;
+  margin: -0.5rem;
+}
+
+.spotify-link:hover {
+  background: rgba(75, 180, 230, 0.1);
+  transform: scale(1.02);
+}
+
+.spotify-track {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(30, 215, 96, 0.1));
+  border: 1px solid rgba(29, 185, 84, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.spotify-track:hover {
+  border-color: rgba(29, 185, 84, 0.6);
+  background: linear-gradient(135deg, rgba(29, 185, 84, 0.15), rgba(30, 215, 96, 0.15));
+}
+
+.spotify-icon {
+  font-size: 1.5rem;
+  color: #1db954;
+}
+
+.track-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.track-title {
+  font-weight: 600;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.platform {
+  font-size: 0.8rem;
+  color: #1db954;
+  font-weight: 500;
+}
+
+.external-icon {
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.spotify-link:hover .external-icon {
+  opacity: 1;
+  transform: translate(2px, -2px);
+}
+
+.music-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.music-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.1);
+}
+
+.music-recommendation.hidden {
+  display: none;
+}
+
+/* Music Animations */
+@keyframes musicSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes musicPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Responsive Design for Music Section */
+@media (max-width: 768px) {
+  .music-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .spotify-track {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .music-info {
+    text-align: center;
+  }
+}
+
 /* Toolbar */
 .toolbar{ display:grid; grid-template-columns: 1fr; gap:.75rem; margin-top:.75rem; }
 .controls{ display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; }

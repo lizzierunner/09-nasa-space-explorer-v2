@@ -1167,6 +1167,63 @@ helpToggle.addEventListener("click", () => {
   inp.addEventListener("keydown", e => { if(e.key === "Enter") runQuery(); });
 });
 
+// ====== MUSIC RECOMMENDATION SYSTEM ======
+class MusicRecommendation {
+  constructor() {
+    this.musicSection = $("#musicRecommendation");
+    this.closeButton = $("#musicClose");
+    this.spotifyLink = document.querySelector('.spotify-link');
+    this.init();
+  }
+
+  init() {
+    // Handle close button
+    this.closeButton?.addEventListener('click', () => {
+      this.hide();
+      spaceAudio.sounds.click?.();
+    });
+
+    // Handle Spotify link clicks
+    this.spotifyLink?.addEventListener('click', () => {
+      spaceAudio.sounds.success?.();
+      showNotification('🎵 Opening cosmic soundtrack in Spotify...');
+    });
+
+    // Auto-hide after 10 seconds if user doesn't interact
+    setTimeout(() => {
+      if (this.musicSection && !this.musicSection.classList.contains('hidden')) {
+        this.autoHide();
+      }
+    }, 10000);
+
+    // Show with animation
+    this.show();
+  }
+
+  show() {
+    if (this.musicSection) {
+      this.musicSection.classList.remove('hidden');
+      this.musicSection.style.animation = 'musicSlideIn 0.8s ease-out';
+    }
+  }
+
+  hide() {
+    if (this.musicSection) {
+      this.musicSection.style.animation = 'musicSlideIn 0.3s ease-out reverse';
+      setTimeout(() => {
+        this.musicSection.classList.add('hidden');
+      }, 300);
+    }
+  }
+
+  autoHide() {
+    if (this.musicSection) {
+      this.musicSection.style.opacity = '0.7';
+      setTimeout(() => this.hide(), 2000);
+    }
+  }
+}
+
 // Auto-load on start with spectacular entrance
 window.addEventListener('load', () => {
   console.log('🚀 NASA Space Explorer loaded - prepare for liftoff!');
@@ -1177,6 +1234,11 @@ window.addEventListener('load', () => {
   }, { once: true });
   
   runQuery();
+  
+  // Initialize music recommendation system
+  setTimeout(() => {
+    new MusicRecommendation();
+  }, 2000);
   
   // Show welcome message
   setTimeout(() => {
