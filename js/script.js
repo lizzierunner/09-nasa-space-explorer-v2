@@ -1,6 +1,6 @@
 // ====== CONFIG ======
-const NASA_API_KEY = "8UOE0B0yIdK9f9eaB0WAcsY3JTx7PwJjxQ22c2d0"; // Your personal NASA API key
-const APOD_BASE    = "https://api.nasa.gov/planetary/apod";
+// Using the provided CDN JSON feed as specified in requirements
+const APOD_DATA_URL = "https://cdn.jsdelivr.net/gh/GCA-Classroom/apod/data.json";
 
 // ====== UTILITIES ======
 const $ = sel => document.querySelector(sel);
@@ -21,9 +21,9 @@ const addDays = (d, n) => {
 const diffDays = (a, b) => Math.round((b - a) / 86400000);
 
 const clampDate = (d) => {
-  // APOD supports dates from 1995-06-16 to current date
-  const min = new Date("1995-06-16");
-  const max = new Date('2023-10-29'); // Using current real date
+  // For CDN data, use a reasonable date range
+  const min = new Date("2020-01-01");
+  const max = new Date(); // Current date
   max.setHours(0,0,0,0);
   if(d < min) return min;
   if(d > max) return max;
@@ -109,17 +109,17 @@ const modalDate    = $("#modalDate");
 const modalExpl    = $("#modalExplanation");
 const modalClose   = $("#modalClose");
 
-// Initialize date inputs with a valid range
+// Initialize date inputs with a valid range for the CDN data
 function initDates(){
-  // Set specific dates that we know will work
-  const endDate = new Date(2023, 9, 29); // October 29, 2023
-  const startDate = new Date(2023, 9, 21); // October 21, 2023
+  // Set dates that should be available in the CDN data
+  const endDate = new Date(2025, 9, 1); // October 1, 2025
+  const startDate = new Date(2025, 8, 23); // September 23, 2025 (9 days before)
   
   // Set the input values
   startInp.value = fmt(startDate);
   endInp.value = fmt(endDate);
   
-  console.log('Date inputs initialized:', {
+  console.log('Date inputs initialized for CDN data:', {
     start: startInp.value,
     end: endInp.value
   });
@@ -250,29 +250,33 @@ window.addEventListener("keydown", (e)=> {
 });
 
 async function fetchAPODRange(startDate, endDate){
-  console.log('Fetching APOD data for:', {
+  console.log('Fetching APOD data from CDN for:', {
     start: fmt(startDate),
     end: fmt(endDate)
   });
 
-  const params = new URLSearchParams({
-    api_key: NASA_API_KEY,
-    start_date: fmt(startDate),
-    end_date: fmt(endDate),
-    thumbs: "true"
-  });
-  
-  const url = `${APOD_BASE}?${params.toString()}`;
-  console.log('Making API request to:', url);
-
-  const res = await fetch(url);
+  // Fetch all data from CDN
+  const res = await fetch(APOD_DATA_URL);
   if(!res.ok){
     const text = await res.text();
     throw new Error(`APOD fetch failed (${res.status}): ${text || res.statusText}`);
   }
   
-  const data = await res.json();
-  return data.sort((a,b)=> b.date.localeCompare(a.date));
+  const allData = await res.json();
+  console.log('Fetched', allData.length, 'total entries from CDN');
+  
+  // Filter data based on date range
+  const startStr = fmt(startDate);
+  const endStr = fmt(endDate);
+  
+  const filteredData = allData.filter(item => {
+    return item.date >= startStr && item.date <= endStr;
+  });
+  
+  console.log('Filtered to', filteredData.length, 'entries in date range');
+  
+  // Sort by date (newest first)
+  return filteredData.sort((a,b)=> b.date.localeCompare(a.date));
 }
 
 function setStatus(msg=""){ statusTx.textContent = msg; }
@@ -338,7 +342,7 @@ async function runQuery(){
     let e = endInp.value ? new Date(endInp.value) : null;
 
     if(!s && !e){
-      e = new Date('2023-10-29');
+      e = new Date(); // Use current date
       s = addDays(e, -8);
     }else if(s && !e){
       s = clampDate(s);
