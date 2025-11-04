@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
 :root{
   /* NASA Official Colors */
@@ -20,6 +20,16 @@
   --ring: rgba(16, 91, 216, 0.25);
   --radius: 16px;
   --shadow: 0 10px 25px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.06);
+}
+
+/* NASA Official Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif;
+  font-weight: 600;
+}
+
+.mono, .code, .technical {
+  font-family: 'DM Mono', monospace;
 }
 
 *{box-sizing:border-box}
@@ -73,7 +83,7 @@ html,body{height:100%}
 
 body{
   margin: 0;
-  font-family: 'Titillium Web', system-ui, -apple-system, Segoe UI, sans-serif;
+  font-family: 'Public Sans', system-ui, -apple-system, Segoe UI, sans-serif;
   color: var(--ink);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
