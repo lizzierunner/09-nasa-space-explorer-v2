@@ -984,20 +984,20 @@ async function runQuery(){
 
     // Ensure we get data from the selected date range
     if(!s && !e){
-      // Default: use dates that should have data in the JSON feed
-      e = new Date(2025, 9, 1); // October 1, 2025
-      s = new Date(2025, 8, 24); // September 24, 2025
+      // Default: use 9 consecutive days that should have data in the JSON feed
+      e = new Date(2025, 9, 2); // October 2, 2025
+      s = new Date(2025, 8, 24); // September 24, 2025 (9 consecutive days)
     }else if(s && !e){
-      // Start date provided: calculate end date (about a week later)
+      // Start date provided: calculate end date (9 consecutive days)
       s = clampDate(s);
       e = new Date(s);
-      e.setDate(e.getDate() + 7); // About a week of data
+      e.setDate(e.getDate() + 8); // 9 consecutive days (start day + 8 more)
       e = clampDate(e);
     }else if(!s && e){
-      // End date provided: calculate start date (about a week before)
+      // End date provided: calculate start date (9 consecutive days)
       e = clampDate(e);
       s = new Date(e);
-      s.setDate(s.getDate() - 7); // About a week of data
+      s.setDate(s.getDate() - 8); // 9 consecutive days (8 days before + end day)
       s = clampDate(s);
     }else{
       // Both dates provided: use as-is with clamping
