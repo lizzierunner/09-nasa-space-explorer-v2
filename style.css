@@ -856,3 +856,470 @@ footer{ color:var(--muted); font-size:.9rem; padding:2rem 1rem 3rem; text-align:
   pointer-events: none !important;
   z-index: 1 !important;
 }
+
+/* ====== IMAGE FILTERS ====== */
+.filter-controls {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(16, 91, 216, 0.1), rgba(75, 180, 230, 0.1));
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  border: 1px solid rgba(75, 180, 230, 0.2);
+}
+
+.filter-controls label {
+  font-weight: 600;
+  color: var(--nasa-blue);
+  margin-right: 0.5rem;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.85rem !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: var(--ink) !important;
+  transition: all 0.3s ease !important;
+  text-transform: none !important;
+}
+
+.filter-btn:hover {
+  background: var(--nasa-accent) !important;
+  color: white !important;
+  border-color: var(--nasa-accent) !important;
+  transform: translateY(-2px) !important;
+}
+
+.filter-btn.active {
+  background: var(--nasa-blue) !important;
+  color: white !important;
+  border-color: var(--nasa-blue) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(16, 91, 216, 0.3) !important;
+}
+
+.card.filter-hidden {
+  display: none !important;
+}
+
+/* ====== STATISTICS DASHBOARD ====== */
+.stats-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.stats-dialog {
+  background: linear-gradient(180deg, #1a2040, #0f1527);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  border: 2px solid var(--nasa-accent);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--nasa-accent);
+  padding-bottom: 1rem;
+}
+
+.stats-header h2 {
+  color: var(--nasa-accent);
+  margin: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: rgba(75, 180, 230, 0.1);
+  border: 1px solid rgba(75, 180, 230, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  background: rgba(75, 180, 230, 0.2);
+  transform: translateY(-4px);
+  border-color: var(--nasa-accent);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--nasa-accent);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.achievements {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievements h3 {
+  color: var(--nasa-accent);
+  margin-bottom: 1rem;
+}
+
+.achievement-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.achievement {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievement.unlocked {
+  border-color: var(--nasa-accent);
+  background: rgba(75, 180, 230, 0.1);
+}
+
+.achievement-icon {
+  font-size: 2rem;
+  filter: grayscale(100%);
+  opacity: 0.3;
+}
+
+.achievement.unlocked .achievement-icon {
+  filter: grayscale(0%);
+  opacity: 1;
+  animation: achievementPulse 1s ease;
+}
+
+.achievement-info {
+  flex: 1;
+}
+
+.achievement-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.achievement-desc {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes achievementPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* ====== SPACE QUIZ ====== */
+.quiz-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.quiz-dialog {
+  background: linear-gradient(180deg, #1a2040, #0f1527);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  border: 2px solid var(--nasa-accent);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  max-width: 600px;
+  width: 90%;
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--nasa-accent);
+  padding-bottom: 1rem;
+}
+
+.quiz-progress {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.quiz-score {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--nasa-accent);
+}
+
+.quiz-question {
+  margin-bottom: 2rem;
+}
+
+.question-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.quiz-options {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.quiz-option {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  color: white;
+  font-weight: 500;
+}
+
+.quiz-option:hover {
+  background: rgba(75, 180, 230, 0.2);
+  border-color: var(--nasa-accent);
+  transform: translateX(5px);
+}
+
+.quiz-option.correct {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+}
+
+.quiz-option.incorrect {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+.quiz-option.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.quiz-result {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.quiz-result h3 {
+  color: var(--nasa-accent);
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.final-score {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--nasa-accent);
+  margin-bottom: 0.5rem;
+}
+
+.quiz-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* ====== SPACE WEATHER ====== */
+.weather-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.weather-dialog {
+  background: linear-gradient(180deg, #1a2040, #0f1527);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  border: 2px solid var(--nasa-accent);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  max-width: 700px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.weather-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--nasa-accent);
+  padding-bottom: 1rem;
+}
+
+.weather-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.weather-card {
+  background: rgba(75, 180, 230, 0.1);
+  border: 1px solid rgba(75, 180, 230, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.weather-card:hover {
+  background: rgba(75, 180, 230, 0.2);
+  border-color: var(--nasa-accent);
+}
+
+.weather-card h3 {
+  color: var(--nasa-accent);
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weather-icon {
+  font-size: 1.5rem;
+}
+
+.weather-data {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.weather-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.weather-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.weather-value {
+  font-weight: 600;
+  color: white;
+}
+
+.weather-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-low {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.status-moderate {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.status-high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* ====== WALLPAPER GENERATOR ====== */
+.wallpaper-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wallpaper-section h3 {
+  color: var(--nasa-accent);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.wallpaper-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.wallpaper-btn {
+  padding: 0.6rem 1rem !important;
+  font-size: 0.85rem !important;
+  border-radius: 20px !important;
+  background: rgba(75, 180, 230, 0.2) !important;
+  border: 1px solid var(--nasa-accent) !important;
+  color: white !important;
+  transition: all 0.3s ease !important;
+}
+
+.wallpaper-btn:hover {
+  background: var(--nasa-accent) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(75, 180, 230, 0.4) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filter-controls {
+    justify-content: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .wallpaper-buttons {
+    justify-content: center;
+  }
+}
+

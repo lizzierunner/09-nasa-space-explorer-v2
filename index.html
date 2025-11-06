@@ -30,6 +30,9 @@
         <button id="go">Get Space Images</button>
         <button id="sound-toggle" title="Toggle Sound Effects" aria-label="Toggle sound effects">🔊</button>
         <button id="help-toggle" title="Keyboard Shortcuts (H)" aria-label="Show keyboard shortcuts">❓</button>
+        <button id="stats-toggle" title="View Your Stats" aria-label="View statistics">📊</button>
+        <button id="quiz-toggle" title="Space Quiz" aria-label="Start space quiz">🎮</button>
+        <button id="weather-toggle" title="Space Weather" aria-label="View space weather">🌍</button>
       </div>
 
       <div class="fact" id="factBox" aria-live="polite"></div>
@@ -68,6 +71,17 @@
       <span id="statusText"></span>
     </div>
 
+    <!-- Filter Controls -->
+    <div class="filter-controls" id="filterControls">
+      <label>🎨 Image Filters:</label>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="galaxy">🌌 Galaxies</button>
+      <button class="filter-btn" data-filter="nebula">☁️ Nebulas</button>
+      <button class="filter-btn" data-filter="planet">🪐 Planets</button>
+      <button class="filter-btn" data-filter="star">⭐ Stars</button>
+      <button class="filter-btn" data-filter="other">🔭 Other</button>
+    </div>
+
     <section class="gallery" id="gallery" aria-live="polite"></section>
   </main>
 
@@ -82,6 +96,17 @@
       <div class="modal-body">
         <p class="date" id="modalDate"></p>
         <p id="modalExplanation"></p>
+        
+        <!-- Wallpaper Generator -->
+        <div class="wallpaper-section">
+          <h3>📱 Save as Wallpaper</h3>
+          <div class="wallpaper-buttons">
+            <button class="wallpaper-btn" data-size="phone">Phone (9:16)</button>
+            <button class="wallpaper-btn" data-size="desktop">Desktop (16:9)</button>
+            <button class="wallpaper-btn" data-size="tablet">Tablet (4:3)</button>
+            <button class="wallpaper-btn" data-size="print">Print (A4)</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -521,6 +521,713 @@ class FavoritesManager {
 
 const favoritesManager = new FavoritesManager();
 
+// ====== IMAGE FILTER SYSTEM ======
+class ImageFilterSystem {
+  constructor() {
+    this.currentFilter = 'all';
+    this.filterKeywords = {
+      galaxy: ['galaxy', 'galaxies', 'spiral', 'elliptical', 'andromeda', 'milky way'],
+      nebula: ['nebula', 'nebulae', 'cloud', 'emission', 'reflection', 'planetary nebula'],
+      planet: ['planet', 'mars', 'jupiter', 'saturn', 'venus', 'mercury', 'uranus', 'neptune', 'earth'],
+      star: ['star', 'stellar', 'supernova', 'constellation', 'cluster', 'sun', 'solar']
+    };
+    this.init();
+  }
+
+  init() {
+    // Get filter buttons
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active button
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Apply filter
+        this.currentFilter = btn.dataset.filter;
+        this.applyFilter();
+        spaceAudio.play('click');
+      });
+    });
+  }
+
+  applyFilter() {
+    const cards = document.querySelectorAll('.card');
+    
+    cards.forEach(card => {
+      if (this.currentFilter === 'all') {
+        card.classList.remove('filter-hidden');
+      } else {
+        const title = card.querySelector('.title')?.textContent.toLowerCase() || '';
+        const isMatch = this.matchesFilter(title, this.currentFilter);
+        
+        if (isMatch) {
+          card.classList.remove('filter-hidden');
+        } else {
+          card.classList.add('filter-hidden');
+        }
+      }
+    });
+
+    // Update keyboard navigation
+    keyboardNav.updateCards();
+  }
+
+  matchesFilter(text, filter) {
+    // Check if text matches any keywords for the filter
+    const keywords = this.filterKeywords[filter] || [];
+    return keywords.some(keyword => text.includes(keyword));
+  }
+}
+
+const imageFilterSystem = new ImageFilterSystem();
+
+// ====== STATISTICS TRACKER ======
+class StatisticsTracker {
+  constructor() {
+    this.stats = this.loadStats();
+    this.achievements = [
+      { id: 'first_view', icon: '🚀', name: 'Space Explorer', desc: 'View your first image', unlocked: false },
+      { id: 'ten_views', icon: '🌟', name: 'Cosmic Voyager', desc: 'View 10 images', unlocked: false },
+      { id: 'fifty_views', icon: '🌌', name: 'Galaxy Hopper', desc: 'View 50 images', unlocked: false },
+      { id: 'first_favorite', icon: '⭐', name: 'Stargazer', desc: 'Add your first favorite', unlocked: false },
+      { id: 'five_favorites', icon: '✨', name: 'Constellation Collector', desc: 'Save 5 favorites', unlocked: false },
+      { id: 'night_owl', icon: '🦉', name: 'Night Owl', desc: 'Use the app at night', unlocked: false },
+      { id: 'quiz_master', icon: '🎓', name: 'Quiz Master', desc: 'Score 80% on a quiz', unlocked: false },
+      { id: 'share_master', icon: '📤', name: 'Ambassador', desc: 'Share 3 images', unlocked: false }
+    ];
+    this.loadAchievements();
+  }
+
+  loadStats() {
+    try {
+      const saved = localStorage.getItem('nasa-stats');
+      return saved ? JSON.parse(saved) : {
+        imagesViewed: 0,
+        favoriteCount: 0,
+        queriesRun: 0,
+        sharesCount: 0,
+        quizzesTaken: 0,
+        bestQuizScore: 0,
+        totalTimeSpent: 0,
+        sessionStart: Date.now()
+      };
+    } catch {
+      return {
+        imagesViewed: 0,
+        favoriteCount: 0,
+        queriesRun: 0,
+        sharesCount: 0,
+        quizzesTaken: 0,
+        bestQuizScore: 0,
+        totalTimeSpent: 0,
+        sessionStart: Date.now()
+      };
+    }
+  }
+
+  saveStats() {
+    localStorage.setItem('nasa-stats', JSON.stringify(this.stats));
+  }
+
+  loadAchievements() {
+    try {
+      const saved = localStorage.getItem('nasa-achievements');
+      if (saved) {
+        const savedAchievements = JSON.parse(saved);
+        this.achievements.forEach(achievement => {
+          const saved = savedAchievements.find(a => a.id === achievement.id);
+          if (saved) achievement.unlocked = saved.unlocked;
+        });
+      }
+    } catch (e) {
+      console.log('Could not load achievements');
+    }
+  }
+
+  saveAchievements() {
+    localStorage.setItem('nasa-achievements', JSON.stringify(this.achievements));
+  }
+
+  trackImageView() {
+    this.stats.imagesViewed++;
+    this.saveStats();
+    this.checkAchievements();
+  }
+
+  trackQuery() {
+    this.stats.queriesRun++;
+    this.saveStats();
+  }
+
+  trackShare() {
+    this.stats.sharesCount++;
+    this.saveStats();
+    this.checkAchievements();
+  }
+
+  trackQuiz(score) {
+    this.stats.quizzesTaken++;
+    if (score > this.stats.bestQuizScore) {
+      this.stats.bestQuizScore = score;
+    }
+    this.saveStats();
+    this.checkAchievements();
+  }
+
+  updateSessionTime() {
+    const now = Date.now();
+    const sessionTime = Math.floor((now - this.stats.sessionStart) / 1000 / 60); // minutes
+    return sessionTime;
+  }
+
+  checkAchievements() {
+    // Check for unlockable achievements
+    const checks = {
+      first_view: this.stats.imagesViewed >= 1,
+      ten_views: this.stats.imagesViewed >= 10,
+      fifty_views: this.stats.imagesViewed >= 50,
+      first_favorite: favoritesManager.favorites.length >= 1,
+      five_favorites: favoritesManager.favorites.length >= 5,
+      night_owl: new Date().getHours() >= 22 || new Date().getHours() <= 4,
+      quiz_master: this.stats.bestQuizScore >= 80,
+      share_master: this.stats.sharesCount >= 3
+    };
+
+    this.achievements.forEach(achievement => {
+      if (!achievement.unlocked && checks[achievement.id]) {
+        achievement.unlocked = true;
+        this.showAchievementUnlock(achievement);
+      }
+    });
+
+    this.saveAchievements();
+  }
+
+  showAchievementUnlock(achievement) {
+    const notification = document.createElement('div');
+    notification.className = 'space-notification';
+    notification.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+    notification.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 2rem;">${achievement.icon}</span>
+        <div>
+          <div style="font-weight: 700;">Achievement Unlocked!</div>
+          <div style="font-size: 0.9rem;">${achievement.name}</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    spaceAudio.play('success');
+    setTimeout(() => notification.remove(), 4000);
+  }
+
+  showStatsModal() {
+    const sessionTime = this.updateSessionTime();
+    
+    const modal = document.createElement('div');
+    modal.className = 'stats-modal';
+    modal.innerHTML = `
+      <div class="stats-dialog">
+        <div class="stats-header">
+          <h2>📊 Your Space Explorer Stats</h2>
+          <button class="close">✕</button>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-value">${this.stats.imagesViewed}</span>
+            <span class="stat-label">Images Viewed</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">${favoritesManager.favorites.length}</span>
+            <span class="stat-label">Favorites</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">${this.stats.queriesRun}</span>
+            <span class="stat-label">Searches</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">${this.stats.sharesCount}</span>
+            <span class="stat-label">Shares</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">${this.stats.quizzesTaken}</span>
+            <span class="stat-label">Quizzes</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">${this.stats.bestQuizScore}%</span>
+            <span class="stat-label">Best Score</span>
+          </div>
+        </div>
+
+        <div class="achievements">
+          <h3>🏆 Achievements</h3>
+          <div class="achievement-list">
+            ${this.achievements.map(a => `
+              <div class="achievement ${a.unlocked ? 'unlocked' : ''}">
+                <div class="achievement-icon">${a.icon}</div>
+                <div class="achievement-info">
+                  <div class="achievement-name">${a.name}</div>
+                  <div class="achievement-desc">${a.desc}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+  }
+}
+
+const statsTracker = new StatisticsTracker();
+
+// ====== SPACE QUIZ ======
+class SpaceQuiz {
+  constructor() {
+    this.questions = [
+      {
+        question: "What is the largest planet in our solar system?",
+        options: ["Mars", "Jupiter", "Saturn", "Neptune"],
+        correct: 1
+      },
+      {
+        question: "How long does it take light from the Sun to reach Earth?",
+        options: ["8 seconds", "8 minutes", "8 hours", "8 days"],
+        correct: 1
+      },
+      {
+        question: "What is a nebula?",
+        options: ["A dying star", "A cloud of gas and dust", "A type of planet", "A black hole"],
+        correct: 1
+      },
+      {
+        question: "Which planet is known as the 'Red Planet'?",
+        options: ["Venus", "Mars", "Jupiter", "Mercury"],
+        correct: 1
+      },
+      {
+        question: "What is the name of our galaxy?",
+        options: ["Andromeda", "Milky Way", "Whirlpool", "Sombrero"],
+        correct: 1
+      },
+      {
+        question: "How many moons does Mars have?",
+        options: ["0", "1", "2", "4"],
+        correct: 2
+      },
+      {
+        question: "What causes a solar eclipse?",
+        options: ["Earth blocks the Sun", "Moon blocks the Sun", "Mars blocks the Sun", "Clouds block the Sun"],
+        correct: 1
+      },
+      {
+        question: "Which is the hottest planet in our solar system?",
+        options: ["Mercury", "Venus", "Mars", "Jupiter"],
+        correct: 1
+      },
+      {
+        question: "What is the ISS?",
+        options: ["International Space Station", "Inter-Stellar Spaceship", "Isolated Star System", "Intelligent Space Satellite"],
+        correct: 0
+      },
+      {
+        question: "How many planets are in our solar system?",
+        options: ["7", "8", "9", "10"],
+        correct: 1
+      }
+    ];
+    this.currentQuestion = 0;
+    this.score = 0;
+    this.selectedQuestions = [];
+  }
+
+  start() {
+    // Select 5 random questions
+    this.selectedQuestions = this.shuffleArray([...this.questions]).slice(0, 5);
+    this.currentQuestion = 0;
+    this.score = 0;
+    this.showQuiz();
+  }
+
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  showQuiz() {
+    const modal = document.createElement('div');
+    modal.className = 'quiz-modal';
+    modal.id = 'quiz-modal';
+    
+    const question = this.selectedQuestions[this.currentQuestion];
+    
+    modal.innerHTML = `
+      <div class="quiz-dialog">
+        <div class="quiz-header">
+          <h2>🎮 Space Quiz</h2>
+          <div>
+            <span class="quiz-progress">Question ${this.currentQuestion + 1}/${this.selectedQuestions.length}</span>
+            <span class="quiz-score"> | Score: ${this.score}</span>
+          </div>
+          <button class="close">✕</button>
+        </div>
+        
+        <div class="quiz-question">
+          <div class="question-text">${question.question}</div>
+          <div class="quiz-options">
+            ${question.options.map((option, index) => `
+              <button class="quiz-option" data-index="${index}">${option}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listeners
+    modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+    
+    modal.querySelectorAll('.quiz-option').forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleAnswer(e, question.correct));
+    });
+  }
+
+  handleAnswer(e, correctIndex) {
+    const selectedIndex = parseInt(e.target.dataset.index);
+    const options = document.querySelectorAll('.quiz-option');
+    
+    // Disable all options
+    options.forEach(opt => opt.classList.add('disabled'));
+    
+    // Show correct/incorrect
+    if (selectedIndex === correctIndex) {
+      e.target.classList.add('correct');
+      this.score += 20; // 20 points per question
+      spaceAudio.play('success');
+    } else {
+      e.target.classList.add('incorrect');
+      options[correctIndex].classList.add('correct');
+      spaceAudio.play('click');
+    }
+    
+    // Update score display
+    document.querySelector('.quiz-score').textContent = ` | Score: ${this.score}`;
+    
+    // Move to next question after delay
+    setTimeout(() => {
+      this.currentQuestion++;
+      
+      if (this.currentQuestion < this.selectedQuestions.length) {
+        document.getElementById('quiz-modal').remove();
+        this.showQuiz();
+      } else {
+        this.showResults();
+      }
+    }, 1500);
+  }
+
+  showResults() {
+    const modal = document.getElementById('quiz-modal');
+    const percentage = this.score;
+    
+    statsTracker.trackQuiz(percentage);
+    
+    let message = '';
+    let emoji = '';
+    
+    if (percentage >= 80) {
+      message = 'Outstanding! You are a true space expert!';
+      emoji = '🌟';
+    } else if (percentage >= 60) {
+      message = 'Great job! Keep exploring!';
+      emoji = '🚀';
+    } else if (percentage >= 40) {
+      message = 'Good effort! Keep learning!';
+      emoji = '🌙';
+    } else {
+      message = 'Keep studying the cosmos!';
+      emoji = '⭐';
+    }
+    
+    modal.querySelector('.quiz-dialog').innerHTML = `
+      <div class="quiz-result">
+        <h3>${emoji} Quiz Complete! ${emoji}</h3>
+        <div class="final-score">${percentage}%</div>
+        <p>${message}</p>
+        <div class="quiz-actions">
+          <button class="retry-quiz">Try Again</button>
+          <button class="close-quiz">Close</button>
+        </div>
+      </div>
+    `;
+    
+    modal.querySelector('.retry-quiz').addEventListener('click', () => {
+      modal.remove();
+      this.start();
+    });
+    
+    modal.querySelector('.close-quiz').addEventListener('click', () => {
+      modal.remove();
+    });
+  }
+}
+
+const spaceQuiz = new SpaceQuiz();
+
+// ====== SPACE WEATHER ======
+class SpaceWeather {
+  constructor() {
+    this.data = null;
+  }
+
+  async fetchWeatherData() {
+    // Simulated space weather data (in real app, would call NASA APIs)
+    // NASA's DONKI API would be used for real data
+    return {
+      solarActivity: {
+        status: ['Low', 'Moderate', 'High'][Math.floor(Math.random() * 3)],
+        flares: Math.floor(Math.random() * 10),
+        sunspots: Math.floor(Math.random() * 50) + 10
+      },
+      geomagneticStorm: {
+        kpIndex: (Math.random() * 9).toFixed(1),
+        status: ['Quiet', 'Unsettled', 'Storm'][Math.floor(Math.random() * 3)]
+      },
+      aurora: {
+        visibility: ['Low', 'Moderate', 'High'][Math.floor(Math.random() * 3)],
+        latitude: Math.floor(Math.random() * 30) + 50
+      },
+      meteorShowers: [
+        { name: 'Perseids', peak: 'Aug 11-13', active: false },
+        { name: 'Geminids', peak: 'Dec 13-14', active: false },
+        { name: 'Quadrantids', peak: 'Jan 3-4', active: false }
+      ],
+      iss: {
+        visible: Math.random() > 0.5,
+        nextPass: this.getRandomTime()
+      }
+    };
+  }
+
+  getRandomTime() {
+    const hour = Math.floor(Math.random() * 24);
+    const minute = Math.floor(Math.random() * 60);
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  }
+
+  async show() {
+    this.data = await this.fetchWeatherData();
+    
+    const modal = document.createElement('div');
+    modal.className = 'weather-modal';
+    
+    const statusClass = this.data.solarActivity.status.toLowerCase();
+    const auroraClass = this.data.aurora.visibility.toLowerCase();
+    const geoClass = this.data.geomagneticStorm.status.toLowerCase();
+    
+    modal.innerHTML = `
+      <div class="weather-dialog">
+        <div class="weather-header">
+          <h2>🌍 Space Weather Report</h2>
+          <button class="close">✕</button>
+        </div>
+        
+        <div class="weather-grid">
+          <div class="weather-card">
+            <h3><span class="weather-icon">☀️</span> Solar Activity</h3>
+            <div class="weather-data">
+              <div class="weather-item">
+                <span class="weather-label">Status:</span>
+                <span class="weather-status status-${statusClass}">${this.data.solarActivity.status}</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label">Solar Flares (24h):</span>
+                <span class="weather-value">${this.data.solarActivity.flares}</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label">Sunspot Count:</span>
+                <span class="weather-value">${this.data.solarActivity.sunspots}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="weather-card">
+            <h3><span class="weather-icon">🧲</span> Geomagnetic Field</h3>
+            <div class="weather-data">
+              <div class="weather-item">
+                <span class="weather-label">Status:</span>
+                <span class="weather-status status-${geoClass === 'quiet' ? 'low' : geoClass === 'unsettled' ? 'moderate' : 'high'}">${this.data.geomagneticStorm.status}</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label">Kp Index:</span>
+                <span class="weather-value">${this.data.geomagneticStorm.kpIndex}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="weather-card">
+            <h3><span class="weather-icon">🌌</span> Aurora Forecast</h3>
+            <div class="weather-data">
+              <div class="weather-item">
+                <span class="weather-label">Visibility:</span>
+                <span class="weather-status status-${auroraClass}">${this.data.aurora.visibility}</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label">Visible Latitude:</span>
+                <span class="weather-value">${this.data.aurora.latitude}° and above</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="weather-card">
+            <h3><span class="weather-icon">🛰️</span> ISS Tracking</h3>
+            <div class="weather-data">
+              <div class="weather-item">
+                <span class="weather-label">Visible Tonight:</span>
+                <span class="weather-value">${this.data.iss.visible ? 'Yes ✓' : 'No'}</span>
+              </div>
+              <div class="weather-item">
+                <span class="weather-label">Next Pass:</span>
+                <span class="weather-value">${this.data.iss.nextPass}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="weather-card">
+            <h3><span class="weather-icon">☄️</span> Meteor Showers</h3>
+            <div class="weather-data">
+              ${this.data.meteorShowers.map(shower => `
+                <div class="weather-item">
+                  <span class="weather-label">${shower.name}:</span>
+                  <span class="weather-value">${shower.peak}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        
+        <p style="text-align: center; margin-top: 1rem; opacity: 0.7; font-size: 0.85rem;">
+          Data simulated for demonstration. Real app would use NASA DONKI & other APIs.
+        </p>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+  }
+}
+
+const spaceWeather = new SpaceWeather();
+
+// ====== WALLPAPER GENERATOR ======
+class WallpaperGenerator {
+  constructor() {
+    this.sizes = {
+      phone: { width: 1080, height: 1920, name: 'Phone (9:16)' },
+      desktop: { width: 1920, height: 1080, name: 'Desktop (16:9)' },
+      tablet: { width: 2048, height: 1536, name: 'Tablet (4:3)' },
+      print: { width: 2480, height: 3508, name: 'Print (A4)' }
+    };
+  }
+
+  async generate(imageUrl, size, title, date) {
+    const dimensions = this.sizes[size];
+    
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+    const ctx = canvas.getContext('2d');
+    
+    // Load image
+    const img = await this.loadImage(imageUrl);
+    
+    // Draw background (black)
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate image dimensions to fit
+    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+    const scaledWidth = img.width * scale;
+    const scaledHeight = img.height * scale;
+    const x = (canvas.width - scaledWidth) / 2;
+    const y = (canvas.height - scaledHeight) / 2;
+    
+    // Draw image
+    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+    
+    // Add text overlay at bottom
+    const padding = 40;
+    const textHeight = 120;
+    
+    // Semi-transparent background for text
+    const gradient = ctx.createLinearGradient(0, canvas.height - textHeight, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, canvas.height - textHeight, canvas.width, textHeight);
+    
+    // Draw title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${dimensions.width > 1500 ? 36 : 24}px Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(title, canvas.width / 2, canvas.height - textHeight + padding + 30);
+    
+    // Draw date and NASA branding
+    ctx.font = `${dimensions.width > 1500 ? 20 : 14}px Inter, sans-serif`;
+    ctx.fillStyle = '#4BB4E6';
+    ctx.fillText(`NASA APOD - ${date}`, canvas.width / 2, canvas.height - textHeight + padding + 65);
+    
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `NASA_APOD_${size}_${date.replace(/\s/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      showNotification(`📱 ${dimensions.name} wallpaper downloaded!`);
+      spaceAudio.play('success');
+    });
+  }
+
+  loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+}
+
+const wallpaperGenerator = new WallpaperGenerator();
+
 // ====== UTILITIES ======
 const $ = sel => document.querySelector(sel);
 
@@ -647,6 +1354,9 @@ function initDates(){
 function openModal(item){
   console.log('Debug - Opening modal for:', item);
   spaceAudio.play('modal');
+  
+  // Track stats
+  statsTracker.trackImageView();
   
   const formattedDate = new Date(item.date).toLocaleDateString(undefined, {
     weekday: 'long',
@@ -776,6 +1486,9 @@ function openModal(item){
   // Add sharing functionality after media
   modalMedia.appendChild(shareContainer);
   setupSharingButtons(item);
+  
+  // Setup wallpaper buttons
+  setupWallpaperButtons(item, formattedDate);
 
   modal.setAttribute("aria-hidden","false");
   document.body.style.overflow = "hidden";
@@ -800,6 +1513,9 @@ function shareContent(item, platform) {
   const text = `Check out this amazing space image: "${item.title}" from NASA's Astronomy Picture of the Day!`;
   const imageUrl = item.hdurl || item.url;
   
+  // Track sharing
+  statsTracker.trackShare();
+  
   switch(platform) {
     case 'twitter':
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
@@ -820,6 +1536,27 @@ function shareContent(item, platform) {
       }
       break;
   }
+}
+
+function setupWallpaperButtons(item, formattedDate) {
+  if (item.media_type !== 'image') return; // Only for images
+  
+  const wallpaperButtons = document.querySelectorAll('.wallpaper-btn');
+  wallpaperButtons.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const size = btn.dataset.size;
+      const imageUrl = item.hdurl || item.url;
+      
+      showNotification('⏳ Generating wallpaper...');
+      
+      try {
+        await wallpaperGenerator.generate(imageUrl, size, item.title, formattedDate);
+      } catch (error) {
+        console.error('Wallpaper generation error:', error);
+        showNotification('❌ Could not generate wallpaper. Try downloading the image directly!');
+      }
+    });
+  });
 }
 
 function downloadImage(url, filename) {
@@ -978,6 +1715,9 @@ async function runQuery(){
     setStatus("Preparing your space gallery…");
     gallery.innerHTML = "";
     spaceAudio.play('woosh');
+    
+    // Track query
+    statsTracker.trackQuery();
 
     let s = startInp.value ? new Date(startInp.value) : null;
     let e = endInp.value ? new Date(endInp.value) : null;
@@ -1028,6 +1768,9 @@ async function runQuery(){
     // Update keyboard navigation and favorites
     keyboardNav.updateCards();
     favoritesManager.updateFavoriteButtons();
+    
+    // Apply current filter
+    imageFilterSystem.applyFilter();
 
   }catch(err){
     console.error('APOD fetch error:', err);
@@ -1159,6 +1902,27 @@ soundToggle.addEventListener("click", () => {
 const helpToggle = $("#help-toggle");
 helpToggle.addEventListener("click", () => {
   keyboardNav.toggleHelpOverlay();
+  spaceAudio.play('click');
+});
+
+// Stats toggle button
+const statsToggle = $("#stats-toggle");
+statsToggle?.addEventListener("click", () => {
+  statsTracker.showStatsModal();
+  spaceAudio.play('click');
+});
+
+// Quiz toggle button
+const quizToggle = $("#quiz-toggle");
+quizToggle?.addEventListener("click", () => {
+  spaceQuiz.start();
+  spaceAudio.play('click');
+});
+
+// Weather toggle button
+const weatherToggle = $("#weather-toggle");
+weatherToggle?.addEventListener("click", () => {
+  spaceWeather.show();
   spaceAudio.play('click');
 });
 
